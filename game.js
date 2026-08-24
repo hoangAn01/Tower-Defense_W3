@@ -30,7 +30,7 @@ const gameState = {
     path: [],
     spawnIndex: 0,
     enemiesKilled: 0,
-    totalWaves: 10
+    totalWaves: 15
 };
 
 // Canvas and Context
@@ -189,12 +189,45 @@ const WAVES = [
         { type: 'tank', count: 10, delay: 400 },
         { type: 'boss', count: 2, delay: 2000 }
     ],
-    // Wave 10 (Final Wave)
+    // Wave 10
     [
         { type: 'normal', count: 25, delay: 100 },
         { type: 'fast', count: 20, delay: 150 },
         { type: 'tank', count: 12, delay: 200 },
         { type: 'boss', count: 3, delay: 3000 }
+    ],
+    // Wave 11
+    [
+        { type: 'normal', count: 30, delay: 100 },
+        { type: 'fast', count: 25, delay: 120 },
+        { type: 'tank', count: 8, delay: 300 },
+        { type: 'boss', count: 2, delay: 2500 }
+    ],
+    // Wave 12
+    [
+        { type: 'fast', count: 30, delay: 80 },
+        { type: 'tank', count: 15, delay: 200 },
+        { type: 'boss', count: 2, delay: 2000 }
+    ],
+    // Wave 13
+    [
+        { type: 'normal', count: 20, delay: 80 },
+        { type: 'fast', count: 20, delay: 100 },
+        { type: 'tank', count: 12, delay: 150 },
+        { type: 'boss', count: 3, delay: 2000 }
+    ],
+    // Wave 14
+    [
+        { type: 'tank', count: 20, delay: 150 },
+        { type: 'boss', count: 4, delay: 2000 },
+        { type: 'fast', count: 30, delay: 100 }
+    ],
+    // Wave 15 (True Final Wave)
+    [
+        { type: 'normal', count: 40, delay: 80 },
+        { type: 'fast', count: 35, delay: 100 },
+        { type: 'tank', count: 20, delay: 150 },
+        { type: 'boss', count: 5, delay: 2500 }
     ]
 ];
 
