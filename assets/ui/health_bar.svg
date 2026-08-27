@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 20" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="healthGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#4CAF50"/>
+      <stop offset="50%" style="stop-color:#FFC107"/>
+      <stop offset="100%" style="stop-color:#F44336"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect x="0" y="0" width="200" height="20" fill="#333" rx="10"/>
+  
+  <!-- Border -->
+  <rect x="0" y="0" width="200" height="20" fill="none" stroke="#666" stroke-width="2" rx="10"/>
+  
+  <!-- Health fill (will be adjusted via width in game) -->
+  <rect x="5" y="5" width="190" height="10" fill="url(#healthGradient)" rx="5" id="healthFill"/>
+  
+  <!-- Glow effect -->
+  <rect x="5" y="5" width="190" height="10" fill="none" stroke="rgba(255, 255, 255, 0.3)" stroke-width="1" rx="5"/>
+</svg>

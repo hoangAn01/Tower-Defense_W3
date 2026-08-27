@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="sniperBulletGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2196F3"/>
+      <stop offset="100%" style="stop-color:#1976D2"/>
+    </linearGradient>
+    <filter id="sniperBulletGlow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+  
+  <!-- Bullet body (long and sleek) -->
+  <rect x="45" y="20" width="10" height="60" fill="url(#sniperBulletGradient)" stroke="#0D47A1" stroke-width="1.5" rx="2" filter="url(#sniperBulletGlow)"/>
+  
+  <!-- Bullet tip -->
+  <path d="M45 20 L50 10 L55 20 Z" fill="#4FC3F7" stroke="#1565C0" stroke-width="1"/>
+  
+  <!-- Bullet base -->
+  <circle cx="50" cy="80" r="5" fill="#01579B" stroke="#003C80" stroke-width="1"/>
+  
+  <!-- Trail effect -->
+  <line x1="50" y1="85" x2="50" y2="100" stroke="rgba(33, 150, 243, 0.6)" stroke-width="3" stroke-linecap="round"/>
+  <line x1="50" y1="90" x2="50" y2="105" stroke="rgba(33, 150, 243, 0.4)" stroke-width="2" stroke-linecap="round"/>
+  <line x1="50" y1="95" x2="50" y2="110" stroke="rgba(33, 150, 243, 0.2)" stroke-width="1" stroke-linecap="round"/>
+  
+  <!-- Energy lines -->
+  <line x1="48" y1="30" x2="52" y2="30" stroke="#4FC3F7" stroke-width="1" opacity="0.8"/>
+  <line x1="48" y1="40" x2="52" y2="40" stroke="#4FC3F7" stroke-width="1" opacity="0.8"/>
+  <line x1="48" y1="50" x2="52" y2="50" stroke="#4FC3F7" stroke-width="1" opacity="0.8"/>
+  <line x1="48" y1="60" x2="52" y2="60" stroke="#4FC3F7" stroke-width="1" opacity="0.8"/>
+</svg>

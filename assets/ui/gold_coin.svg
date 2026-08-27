@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="100%" style="stop-color:#FFB74D"/>
+    </linearGradient>
+    <filter id="goldGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+  
+  <!-- Coin body -->
+  <circle cx="50" cy="50" r="40" fill="url(#goldGradient)" stroke="#FBC02D" stroke-width="3" filter="url(#goldGlow)"/>
+  
+  <!-- Inner circle -->
+  <circle cx="50" cy="50" r="30" fill="#FFEB3B" stroke="#F9A825" stroke-width="2"/>
+  
+  <!-- Coin edge highlight -->
+  <path d="M10 50 Q50 10 90 50 Q50 90 10 50" fill="none" stroke="rgba(255, 255, 255, 0.3)" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Dollar sign -->
+  <path d="M45 30 L55 30 L55 70 L45 70 Z" fill="#263238" opacity="0.8"/>
+  <path d="M35 40 L65 40" stroke="#263238" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+  <path d="M35 60 L65 60" stroke="#263238" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+  
+  <!-- Sparkles -->
+  <circle cx="25" cy="25" r="2" fill="#FFFFFF" opacity="0.9"/>
+  <circle cx="75" cy="25" r="2" fill="#FFFFFF" opacity="0.9"/>
+  <circle cx="25" cy="75" r="2" fill="#FFFFFF" opacity="0.9"/>
+  <circle cx="75" cy="75" r="2" fill="#FFFFFF" opacity="0.9"/>
+  <circle cx="50" cy="15" r="1.5" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="50" cy="85" r="1.5" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="15" cy="50" r="1.5" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="85" cy="50" r="1.5" fill="#FFFFFF" opacity="0.8"/>
+</svg>

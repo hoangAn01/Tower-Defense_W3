@@ -49,6 +49,30 @@ const startWaveBtn = document.getElementById('startWaveBtn');
 const restartBtn = document.getElementById('restartBtn');
 const towerOptions = document.querySelectorAll('.tower-option');
 
+
+// Asset Configuration
+const ASSETS = {
+    towers: {
+        basic: 'assets/towers/basic_tower.svg',
+        sniper: 'assets/towers/sniper_tower.svg',
+        cannon: 'assets/towers/cannon_tower.svg'
+    },
+    enemies: {
+        normal: 'assets/enemies/normal_enemy.svg',
+        fast: 'assets/enemies/fast_enemy.svg',
+        tank: 'assets/enemies/tank_enemy.svg',
+        boss: 'assets/enemies/boss_enemy.svg'
+    },
+    projectiles: {
+        basic: 'assets/projectiles/basic_bullet.svg',
+        sniper: 'assets/projectiles/sniper_bullet.svg',
+        cannon: 'assets/projectiles/cannon_shell.svg'
+    }
+};
+
+// Preloaded images
+const loadedImages = {};
+
 // Tower Types Configuration
 const TOWER_TYPES = {
     basic: {

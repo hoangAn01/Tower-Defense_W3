@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <radialGradient id="bulletGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="100%" style="stop-color:#FFC107"/>
+    </radialGradient>
+    <filter id="bulletGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+  
+  <!-- Bullet body -->
+  <circle cx="50" cy="50" r="20" fill="url(#bulletGradient)" stroke="#FF9800" stroke-width="2" filter="url(#bulletGlow)"/>
+  
+  <!-- Bullet tip -->
+  <circle cx="50" cy="50" r="8" fill="#FFEB3B" stroke="#FBC02D" stroke-width="1"/>
+  
+  <!-- Trail effect -->
+  <ellipse cx="50" cy="65" rx="15" ry="8" fill="rgba(255, 215, 0, 0.3)" opacity="0.7"/>
+  <ellipse cx="50" cy="70" rx="10" ry="5" fill="rgba(255, 215, 0, 0.2)" opacity="0.5"/>
+  
+  <!-- Sparkle effects -->
+  <circle cx="40" cy="40" r="2" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="60" cy="40" r="2" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="35" cy="55" r="1.5" fill="#FFFFFF" opacity="0.6"/>
+  <circle cx="65" cy="55" r="1.5" fill="#FFFFFF" opacity="0.6"/>
+</svg>

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="sniperGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2196F3"/>
+      <stop offset="100%" style="stop-color:#1976D2"/>
+    </linearGradient>
+    <filter id="sniperGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+  
+  <!-- Base -->
+  <circle cx="50" cy="75" r="22" fill="#222" stroke="#444" stroke-width="2"/>
+  
+  <!-- Tower body -->
+  <path d="M35 75 L50 30 L65 75 Z" fill="url(#sniperGradient)" stroke="#0D47A1" stroke-width="2" filter="url(#sniperGlow)"/>
+  
+  <!-- Tower top -->
+  <circle cx="50" cy="30" r="8" fill="#4FC3F7" stroke="#1565C0" stroke-width="1.5"/>
+  
+  <!-- Barrel (long sniper barrel) -->
+  <rect x="48" y="10" width="4" height="25" fill="#01579B" rx="0.5"/>
+  
+  <!-- Scope -->
+  <circle cx="50" cy="25" r="3" fill="#E0F2F1" stroke="#B2EBF2" stroke-width="1"/>
+  <circle cx="50" cy="25" r="1.5" fill="#006064"/>
+  
+  <!-- Details -->
+  <line x1="40" y1="45" x2="60" y2="45" stroke="#1565C0" stroke-width="1"/>
+  <line x1="45" y1="55" x2="55" y2="55" stroke="#1565C0" stroke-width="1"/>
+  
+  <!-- Range indicator -->
+  <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(33, 150, 243, 0.3)" stroke-width="1" stroke-dasharray="5,3" opacity="0.5"/>
+</svg>

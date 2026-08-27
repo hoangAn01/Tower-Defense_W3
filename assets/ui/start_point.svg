@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="startGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4CAF50"/>
+      <stop offset="100%" style="stop-color:#8BC34A"/>
+    </linearGradient>
+    <filter id="startGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <radialGradient id="startAura" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" style="stop-color:rgba(76, 175, 80, 0.8)"/>
+      <stop offset="100%" style="stop-color:rgba(76, 175, 80, 0)"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Aura -->
+  <circle cx="50" cy="50" r="45" fill="url(#startAura)" opacity="0.6"/>
+  
+  <!-- Outer ring -->
+  <circle cx="50" cy="50" r="40" fill="none" stroke="url(#startGradient)" stroke-width="4" stroke-dasharray="10,5" filter="url(#startGlow)"/>
+  
+  <!-- Inner circle -->
+  <circle cx="50" cy="50" r="30" fill="url(#startGradient)" stroke="#2E7D32" stroke-width="3"/>
+  
+  <!-- Arrow (pointing right) -->
+  <path d="M35 50 L65 50 M55 40 L65 50 L55 60 Z" fill="#FFFFFF" stroke="#2E7D32" stroke-width="2"/>
+  
+  <!-- Sparkles -->
+  <circle cx="25" cy="25" r="2" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="75" cy="25" r="2" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="25" cy="75" r="2" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="75" cy="75" r="2" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="50" cy="15" r="2" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="50" cy="85" r="2" fill="#FFFFFF" opacity="0.8"/>
+</svg>
