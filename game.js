@@ -796,6 +796,9 @@ function drawGame() {
     // Clear canvas
     ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
+    // Draw grid background
+    drawGrid();
+
     // Draw path
     drawPath();
 
@@ -830,11 +833,34 @@ function drawGame() {
     }
 }
 
+function drawGrid() {
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 0.5;
+    
+    // Draw vertical lines
+    for (let x = 0; x <= CONFIG.CANVAS_WIDTH; x += CONFIG.GRID_SIZE) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, CONFIG.CANVAS_HEIGHT);
+        ctx.stroke();
+    }
+    
+    // Draw horizontal lines
+    for (let y = 0; y <= CONFIG.CANVAS_HEIGHT; y += CONFIG.GRID_SIZE) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(CONFIG.CANVAS_WIDTH, y);
+        ctx.stroke();
+    }
+}
+
+
 function drawPath() {
     if (gameState.path.length === 0) return;
 
-    ctx.strokeStyle = '#444';
-    ctx.lineWidth = CONFIG.GRID_SIZE - 2;
+    // Draw path line
+    ctx.strokeStyle = '#666';
+    ctx.lineWidth = CONFIG.GRID_SIZE / 2;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
@@ -849,14 +875,20 @@ function drawPath() {
 
     // Draw start and end points
     ctx.beginPath();
-    ctx.arc(gameState.path[0].x, gameState.path[0].y, 8, 0, Math.PI * 2);
+    ctx.arc(gameState.path[0].x, gameState.path[0].y, 10, 0, Math.PI * 2);
     ctx.fillStyle = '#4CAF50';
     ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
 
     ctx.beginPath();
-    ctx.arc(gameState.path[gameState.path.length - 1].x, gameState.path[gameState.path.length - 1].y, 8, 0, Math.PI * 2);
+    ctx.arc(gameState.path[gameState.path.length - 1].x, gameState.path[gameState.path.length - 1].y, 10, 0, Math.PI * 2);
     ctx.fillStyle = '#F44336';
     ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
 }
 
 function drawPlacementPreview() {
