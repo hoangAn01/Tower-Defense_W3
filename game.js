@@ -29,6 +29,8 @@ const gameState = {
     bullets: [],
     path: [],
     spawnIndex: 0,
+    waveStartTime: 0,
+    totalEnemiesInWave: 0
     enemiesKilled: 0,
     totalWaves: 15,
     selectedTowerForUpgrade: null
@@ -57,6 +59,8 @@ const baseHealthEl = document.getElementById('baseHealth');
 const goldEl = document.getElementById('gold');
 const waveEl = document.getElementById('wave');
 const livesEl = document.getElementById('lives');
+const enemyCountEl = document.getElementById('enemyCount');
+const waveTimeEl = document.getElementById('waveTime');
 const gameMessageEl = document.getElementById('gameMessage');
 const selectedTowerNameEl = document.getElementById('selectedTowerName');
 const cancelPlacementBtn = document.getElementById('cancelPlacement');
@@ -656,6 +660,8 @@ function initGame() {
     gameState.bullets = [];
     gameState.spawnIndex = 0;
     gameState.enemiesKilled = 0;
+    gameState.waveStartTime = 0;
+    gameState.totalEnemiesInWave = 0;
     gameState.selectedTowerForUpgrade = null;
     
     initPath();
@@ -677,6 +683,11 @@ function startWave() {
         showGameOverModal(true);
         return;
     }
+    gameState.waveStartTime = Date.now();
+    
+    // Calculate total enemies in this wave
+    const waveConfig = WAVES[gameState.wave];
+    gameState.totalEnemiesInWave = waveConfig.reduce((sum, group) => sum + group.count, 0);
 
     gameState.wave++;
     gameState.isWaveActive = true;
@@ -942,6 +953,20 @@ function updateUI() {
     baseHealthEl.textContent = gameState.health;
     goldEl.textContent = gameState.gold;
     waveEl.textContent = gameState.wave;
+    // Show total enemies in wave when wave is active
+    if (gameState.isWaveActive) {
+        enemyCountEl.textContent = gameState.enemies.length + "/" + gameState.totalEnemiesInWave;
+    } else {
+        enemyCountEl.textContent = gameState.enemies.length;
+    enemyCountEl.textContent = gameState.enemies.length;
+    
+    // Update wave time
+    if (gameState.isWaveActive && gameState.waveStartTime > 0) {
+        const elapsed = Math.floor((Date.now() - gameState.waveStartTime) / 1000);
+        waveTimeEl.textContent = formatTime(elapsed);
+    } else {
+        waveTimeEl.textContent = "0s";
+    }
     livesEl.textContent = gameState.lives;
 
     // Update health color based on percentage
@@ -987,6 +1012,16 @@ function showGameMessage(message, type = 'info') {
     setTimeout(clearGameMessage, 3000);
 }
 
+n// Helper function to format time
+function formatTime(seconds) {
+    if (seconds < 60) {
+        return seconds + "s";
+    } else {
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return minutes + "m " + secs + "s";
+    }
+}
 function showWaveIndicator(waveNumber) {
     const waveIndicator = document.createElement('div');
     waveIndicator.className = 'wave-indicator active';
