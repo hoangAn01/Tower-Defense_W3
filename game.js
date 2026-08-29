@@ -30,7 +30,22 @@ const gameState = {
     path: [],
     spawnIndex: 0,
     enemiesKilled: 0,
-    totalWaves: 15
+    totalWaves: 15,
+    selectedTowerForUpgrade: null
+};
+
+// Upgrade Costs
+const UPGRADE_COSTS = {
+    damage: 30,
+    fireRate: 40,
+    range: 50
+};
+
+// Upgrade Values
+const UPGRADE_VALUES = {
+    damage: 5,
+    fireRate: 5,
+    range: 20
 };
 
 // Canvas and Context
@@ -48,6 +63,20 @@ const cancelPlacementBtn = document.getElementById('cancelPlacement');
 const startWaveBtn = document.getElementById('startWaveBtn');
 const restartBtn = document.getElementById('restartBtn');
 const towerOptions = document.querySelectorAll('.tower-option');
+
+// Upgrade Modal Elements
+const upgradeModal = document.getElementById('upgradeModal');
+const closeUpgradeModalBtn = document.getElementById('closeUpgradeModal');
+const upgradeTowerNameEl = document.getElementById('upgradeTowerName');
+const upgradeLevelEl = document.getElementById('upgradeLevel');
+const upgradeDamageEl = document.getElementById('upgradeDamage');
+const upgradeFireRateEl = document.getElementById('upgradeFireRate');
+const upgradeRangeEl = document.getElementById('upgradeRange');
+const upgradeDamageBtn = document.getElementById('upgradeDamageBtn');
+const upgradeFireRateBtn = document.getElementById('upgradeFireRateBtn');
+const upgradeRangeBtn = document.getElementById('upgradeRangeBtn');
+const sellTowerBtn = document.getElementById('sellTowerBtn');
+const sellRefundEl = document.getElementById('sellRefund');
 
 
 // Asset Configuration
@@ -306,11 +335,18 @@ class Tower {
         this.x = x;
         this.y = y;
         this.type = type;
-        this.config = TOWER_TYPES[type];
+        this.baseConfig = { ...TOWER_TYPES[type] };
+        this.config = { ...TOWER_TYPES[type] };
         this.cooldown = 0;
         this.target = null;
         this.gridX = Math.floor(x / CONFIG.GRID_SIZE);
         this.gridY = Math.floor(y / CONFIG.GRID_SIZE);
+        this.level = 1;
+        this.upgrades = {
+            damage: 0,
+            fireRate: 0,
+            range: 0
+        };
     }
 
     update() {
@@ -354,6 +390,46 @@ class Tower {
         );
         gameState.bullets.push(bullet);
         this.cooldown = this.config.cooldown;
+    }
+
+    getSellValue() {
+        // Refund 50% of original cost plus 50% of upgrade costs
+        const baseRefund = Math.floor(this.baseConfig.cost * 0.5);
+        const upgradeCosts = 
+            (this.upgrades.damage * UPGRADE_COSTS.damage * 0.5) +
+            (this.upgrades.fireRate * UPGRADE_COSTS.fireRate * 0.5) +
+            (this.upgrades.range * UPGRADE_COSTS.range * 0.5);
+        return baseRefund + Math.floor(upgradeCosts);
+    }
+
+    upgrade(type) {
+        const cost = UPGRADE_COSTS[type];
+        const value = UPGRADE_VALUES[type];
+        
+        if (gameState.gold < cost) {
+            showGameMessage('Not enough gold for upgrade!', 'danger');
+            return false;
+        }
+
+        switch (type) {
+            case 'damage':
+                this.config.damage += value;
+                this.upgrades.damage++;
+                break;
+            case 'fireRate':
+                this.config.cooldown = Math.max(5, this.config.cooldown - value);
+                this.upgrades.fireRate++;
+                break;
+            case 'range':
+                this.config.range += value;
+                this.upgrades.range++;
+                break;
+        }
+
+        this.level++;
+        gameState.gold -= cost;
+        updateUI();
+        return true;
     }
 
     draw() {
@@ -580,10 +656,12 @@ function initGame() {
     gameState.bullets = [];
     gameState.spawnIndex = 0;
     gameState.enemiesKilled = 0;
+    gameState.selectedTowerForUpgrade = null;
     
     initPath();
     updateUI();
     clearGameMessage();
+    closeUpgradeModal();
     
     // Clear canvas
     ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
@@ -722,6 +800,16 @@ function drawGame() {
     // Draw tower placement preview
     if (gameState.selectedTowerType) {
         drawPlacementPreview();
+    }
+
+    // Draw selected tower range
+    if (gameState.selectedTowerForUpgrade) {
+        const tower = gameState.selectedTowerForUpgrade;
+        ctx.beginPath();
+        ctx.arc(tower.x, tower.y, tower.config.range, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(244, 67, 54, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
     }
 }
 
@@ -865,7 +953,7 @@ function updateUI() {
     towerOptions.forEach(option => {
         const towerType = option.dataset.towerType;
         const towerCost = parseInt(option.dataset.cost);
-        option.disabled = gameState.gold < towerCost || gameState.isWaveActive;
+        option.disabled = gameState.gold < towerCost || gameState.isWaveActive || gameState.isGameOver;
     });
 
     // Update selected tower info
@@ -876,6 +964,9 @@ function updateUI() {
         selectedTowerNameEl.textContent = 'None';
         cancelPlacementBtn.style.display = 'none';
     }
+
+    // Update wave button
+    startWaveBtn.disabled = gameState.isWaveActive || gameState.isGameOver;
 }
 
 function clearGameMessage() {
@@ -899,6 +990,29 @@ function showWaveIndicator(waveNumber) {
     setTimeout(() => {
         waveIndicator.remove();
     }, 2000);
+}
+
+function showUpgradeModal(tower) {
+    gameState.selectedTowerForUpgrade = tower;
+    
+    upgradeTowerNameEl.textContent = `${tower.config.name} (Lvl ${tower.level})`;
+    upgradeLevelEl.textContent = tower.level;
+    upgradeDamageEl.textContent = tower.config.damage;
+    upgradeFireRateEl.textContent = tower.config.cooldown;
+    upgradeRangeEl.textContent = tower.config.range;
+    sellRefundEl.textContent = `${tower.getSellValue()}g`;
+    
+    // Update upgrade button costs
+    upgradeDamageBtn.innerHTML = `Upgrade Damage<br><span class="upgrade-cost">+${UPGRADE_VALUES.damage} dmg | ${UPGRADE_COSTS.damage}g</span>`;
+    upgradeFireRateBtn.innerHTML = `Upgrade Fire Rate<br><span class="upgrade-cost">-${UPGRADE_VALUES.fireRate} cooldown | ${UPGRADE_COSTS.fireRate}g</span>`;
+    upgradeRangeBtn.innerHTML = `Upgrade Range<br><span class="upgrade-cost">+${UPGRADE_VALUES.range} range | ${UPGRADE_COSTS.range}g</span>`;
+    
+    upgradeModal.classList.add('active');
+}
+
+function closeUpgradeModal() {
+    gameState.selectedTowerForUpgrade = null;
+    upgradeModal.classList.remove('active');
 }
 
 function showGameOverModal(isWin) {
@@ -978,10 +1092,10 @@ canvas.addEventListener('click', (e) => {
         const gridPos = pixelToGrid(x, y);
         placeTower(gridPos.x, gridPos.y);
     } else {
-        // Check if clicking on a tower to show info
+        // Check if clicking on a tower to show upgrade menu
         const tower = getTowerAtPosition(x, y);
         if (tower) {
-            showGameMessage(`${tower.config.name} - Damage: ${tower.config.damage}, Range: ${tower.config.range}`, 'info');
+            showUpgradeModal(tower);
         }
     }
 });
@@ -1032,11 +1146,73 @@ restartBtn.addEventListener('click', () => {
 
 // Handle keyboard shortcuts
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && gameState.selectedTowerType) {
-        gameState.selectedTowerType = null;
-        gameState.selectedTowerCost = 0;
-        towerOptions.forEach(opt => opt.classList.remove('selected'));
+    if (e.key === 'Escape') {
+        if (gameState.selectedTowerForUpgrade) {
+            closeUpgradeModal();
+        } else if (gameState.selectedTowerType) {
+            gameState.selectedTowerType = null;
+            gameState.selectedTowerCost = 0;
+            towerOptions.forEach(opt => opt.classList.remove('selected'));
+            updateUI();
+        }
+    }
+});
+
+// Upgrade Modal Event Listeners
+closeUpgradeModalBtn.addEventListener('click', closeUpgradeModal);
+
+upgradeDamageBtn.addEventListener('click', () => {
+    if (gameState.selectedTowerForUpgrade) {
+        const success = gameState.selectedTowerForUpgrade.upgrade('damage');
+        if (success) {
+            showUpgradeModal(gameState.selectedTowerForUpgrade);
+            showGameMessage('Damage upgraded!', 'success');
+        }
+    }
+});
+
+upgradeFireRateBtn.addEventListener('click', () => {
+    if (gameState.selectedTowerForUpgrade) {
+        const success = gameState.selectedTowerForUpgrade.upgrade('fireRate');
+        if (success) {
+            showUpgradeModal(gameState.selectedTowerForUpgrade);
+            showGameMessage('Fire rate upgraded!', 'success');
+        }
+    }
+});
+
+upgradeRangeBtn.addEventListener('click', () => {
+    if (gameState.selectedTowerForUpgrade) {
+        const success = gameState.selectedTowerForUpgrade.upgrade('range');
+        if (success) {
+            showUpgradeModal(gameState.selectedTowerForUpgrade);
+            showGameMessage('Range upgraded!', 'success');
+        }
+    }
+});
+
+sellTowerBtn.addEventListener('click', () => {
+    if (gameState.selectedTowerForUpgrade) {
+        const tower = gameState.selectedTowerForUpgrade;
+        const refund = tower.getSellValue();
+        gameState.gold += refund;
+        
+        // Remove tower from array
+        const index = gameState.towers.indexOf(tower);
+        if (index > -1) {
+            gameState.towers.splice(index, 1);
+        }
+        
+        closeUpgradeModal();
         updateUI();
+        showGameMessage(`Tower sold! Refunded ${refund}g`, 'success');
+    }
+});
+
+// Close modal when clicking outside
+upgradeModal.addEventListener('click', (e) => {
+    if (e.target === upgradeModal) {
+        closeUpgradeModal();
     }
 });
 

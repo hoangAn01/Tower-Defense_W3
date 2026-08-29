@@ -74,6 +74,51 @@
                 <button id="cancelPlacement" class="btn btn-cancel" style="display: none;">Cancel</button>
             </div>
         </div>
+        
+        <!-- Tower Upgrade Modal -->
+        <div id="upgradeModal" class="upgrade-modal">
+            <div class="upgrade-content">
+                <div class="upgrade-header">
+                    <h3 id="upgradeTowerName">Upgrade Tower</h3>
+                    <button id="closeUpgradeModal" class="btn-close">&times;</button>
+                </div>
+                <div class="upgrade-stats">
+                    <div class="upgrade-stat">
+                        <span class="upgrade-stat-label">Level:</span>
+                        <span id="upgradeLevel">1</span>
+                    </div>
+                    <div class="upgrade-stat">
+                        <span class="upgrade-stat-label">Damage:</span>
+                        <span id="upgradeDamage">10</span>
+                    </div>
+                    <div class="upgrade-stat">
+                        <span class="upgrade-stat-label">Fire Rate:</span>
+                        <span id="upgradeFireRate">30</span>
+                    </div>
+                    <div class="upgrade-stat">
+                        <span class="upgrade-stat-label">Range:</span>
+                        <span id="upgradeRange">150</span>
+                    </div>
+                </div>
+                <div class="upgrade-options">
+                    <button id="upgradeDamageBtn" class="btn btn-primary">
+                        Upgrade Damage<br>
+                        <span class="upgrade-cost">+5 dmg | 30g</span>
+                    </button>
+                    <button id="upgradeFireRateBtn" class="btn btn-primary">
+                        Upgrade Fire Rate<br>
+                        <span class="upgrade-cost">-5 cooldown | 40g</span>
+                    </button>
+                    <button id="upgradeRangeBtn" class="btn btn-primary">
+                        Upgrade Range<br>
+                        <span class="upgrade-cost">+20 range | 50g</span>
+                    </button>
+                </div>
+                <button id="sellTowerBtn" class="btn btn-cancel">
+                    Sell Tower (Refund: <span id="sellRefund">25g</span>)
+                </button>
+            </div>
+        </div>
     </div>
     
     <script src="game.js"></script>
