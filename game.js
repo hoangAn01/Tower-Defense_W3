@@ -697,9 +697,8 @@ function spawnEnemies() {
         // All enemy groups spawned, check if all enemies are dead
         if (gameState.enemies.length === 0) {
             gameState.isWaveActive = false;
-            gameState.wave++;
             updateUI();
-            showGameMessage(`Wave ${gameState.wave - 1} completed!`, 'success');
+            showGameMessage(`Wave ${gameState.wave} completed!`, 'success');
         }
         return;
     }
@@ -710,20 +709,27 @@ function spawnEnemies() {
     const enemy = new Enemy(enemyGroup.type);
     gameState.enemies.push(enemy);
     
-    // Schedule next spawn
-    gameState.spawnIndex++;
+    // Decrement count and check if more enemies in this group
+    enemyGroup.count--;
     
-    if (gameState.spawnIndex < waveConfig.length) {
+    if (enemyGroup.count > 0) {
+        // More enemies in this group, spawn another
         setTimeout(spawnEnemies, enemyGroup.delay);
     } else {
-        // All groups scheduled, check for completion
-        setTimeout(() => {
-            if (gameState.enemies.length === 0) {
-                gameState.isWaveActive = false;
-                updateUI();
-                showGameMessage(`Wave ${gameState.wave} completed!`, 'success');
-            }
-        }, 1000);
+        // Move to next group
+        gameState.spawnIndex++;
+        if (gameState.spawnIndex < waveConfig.length) {
+            setTimeout(spawnEnemies, enemyGroup.delay);
+        } else {
+            // All groups scheduled, check for completion
+            setTimeout(() => {
+                if (gameState.enemies.length === 0) {
+                    gameState.isWaveActive = false;
+                    updateUI();
+                    showGameMessage(`Wave ${gameState.wave} completed!`, 'success');
+                }
+            }, 1000);
+        }
     }
 }
 
