@@ -834,7 +834,7 @@ function drawGame() {
 }
 
 function drawGrid() {
-    ctx.strokeStyle = '#333';
+    ctx.strokeStyle = '#444';
     ctx.lineWidth = 0.5;
     
     // Draw vertical lines
@@ -859,8 +859,8 @@ function drawPath() {
     if (gameState.path.length === 0) return;
 
     // Draw path line
-    ctx.strokeStyle = '#666';
-    ctx.lineWidth = CONFIG.GRID_SIZE / 2;
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = CONFIG.GRID_SIZE / 4;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
