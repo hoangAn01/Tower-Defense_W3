@@ -30,7 +30,7 @@ const gameState = {
     path: [],
     spawnIndex: 0,
     waveStartTime: 0,
-    totalEnemiesInWave: 0
+    totalEnemiesInWave: 0,
     enemiesKilled: 0,
     totalWaves: 15,
     selectedTowerForUpgrade: null
@@ -990,7 +990,7 @@ function updateUI() {
         enemyCountEl.textContent = gameState.enemies.length + "/" + gameState.totalEnemiesInWave;
     } else {
         enemyCountEl.textContent = gameState.enemies.length;
-    enemyCountEl.textContent = gameState.enemies.length;
+    }
     
     // Update wave time
     if (gameState.isWaveActive && gameState.waveStartTime > 0) {
@@ -1044,7 +1044,7 @@ function showGameMessage(message, type = 'info') {
     setTimeout(clearGameMessage, 3000);
 }
 
-n// Helper function to format time
+// Helper function to format time
 function formatTime(seconds) {
     if (seconds < 60) {
         return seconds + "s";
@@ -1054,6 +1054,7 @@ function formatTime(seconds) {
         return minutes + "m " + secs + "s";
     }
 }
+
 function showWaveIndicator(waveNumber) {
     const waveIndicator = document.createElement('div');
     waveIndicator.className = 'wave-indicator active';
