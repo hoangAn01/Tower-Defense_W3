@@ -205,10 +205,59 @@ test('generated terrain and transparent unit atlas decode and are used by portra
 
 test('failed art downloads keep fallback battlefield and tower placement playable', async ({page}) => {
   await page.route('**/assets/art/*.webp',route=>route.abort());
+  await page.route('**/assets/projectiles/*.svg',route=>route.abort());
   await page.reload(); await page.evaluate(()=>window.artReady);
   expect(await page.evaluate(()=>Object.keys(loadedImages))).toEqual([]);
   await build(page);
   expect(await page.evaluate(()=>{drawGame();return gameState.towers.length;})).toBe(1);
   await page.locator('#startWaveBtn').click(); await page.clock.runFor(3200);
   expect(await page.evaluate(()=>gameState.enemies.length)).toBe(1);
+});
+
+
+test('tower recoil, enemy movement and particles freeze on pause and reset on restart', async ({page}) => {
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.clock.runFor(32);
+  const result=await page.evaluate(()=>{
+    const enemy=new Enemy('normal'); gameState.enemies.push(enemy);
+    const tower=new Tower(enemy.x+70,enemy.y,'cannon');gameState.towers.push(tower);
+    updateGame();
+    const firing=tower.recoilTicks>0 && gameState.bullets[0].type==='cannon' && gameState.effects.some(e=>e.kind==='muzzle');
+    const phase=enemy.animationPhase;
+    gameState.isPaused=true;
+    const before=JSON.stringify({tick:visualTick,recoil:tower.recoilTicks,particles,effects:gameState.effects});
+    for(let i=0;i<60;i++)updateGame();
+    const frozen=before===JSON.stringify({tick:visualTick,recoil:tower.recoilTicks,particles,effects:gameState.effects}) && enemy.animationPhase===phase;
+    initGame();
+    return {firing,frozen,clean:particles.length===0 && gameState.effects.length===0 && visualTick===0};
+  });
+  expect(result).toEqual({firing:true,frozen:true,clean:true});
+});
+
+test('effects expire, stay bounded, and reduced motion suppresses particle bursts', async ({page}) => {
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.clock.runFor(32);
+  expect(await page.evaluate(()=>{
+    for(let i=0;i<1000;i++){burst(100,100,'#fff',14);emitEffect('explosion',100,100,'#fff');}
+    const bounded=particles.length===160 && gameState.effects.length===64;
+    for(let i=0;i<60;i++)updateVisuals();
+    return {bounded,expired:particles.length===0 && gameState.effects.length===0};
+  })).toEqual({bounded:true,expired:true});
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.clock.runFor(32);
+  expect(await page.evaluate(()=>{burst(100,100,'#fff');return particles.length;})).toBe(0);
+});
+
+test('four projectile assets decode; impact, frost and cannon explosion render', async ({page}) => {
+  await page.evaluate(()=>window.artReady);
+  expect(await page.evaluate(()=>{
+    const types=['basic','sniper','cannon','frost'];
+    for(const type of types){
+      if(!loadedImages[`shot_${type}`]?.naturalWidth)throw Error('Missing projectile');
+      const enemy=new Enemy('tank');gameState.enemies=[enemy];
+      const bullet=new Bullet(enemy.x,enemy.y,enemy,TOWER_TYPES[type],type);
+      bullet.draw();bullet.hit();drawEffects();
+    }
+    return ['impact','explosion','frost'].every(kind=>gameState.effects.some(e=>e.kind===kind));
+  })).toBe(true);
 });

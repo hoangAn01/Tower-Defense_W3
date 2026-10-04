@@ -1,8 +1,1 @@
-<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <!-- Bullet body -->
-  <circle cx="50" cy="50" r="8" fill="#4CAF50" stroke="#45a049" stroke-width="1"/>
-  <!-- Glow -->
-  <circle cx="50" cy="50" r="10" fill="none" stroke="#81C784" stroke-width="1" opacity="0.5"/>
-  <!-- Highlight -->
-  <circle cx="53" cy="47" r="2" fill="#fff" opacity="0.8"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="32" viewBox="0 0 64 32"><defs><linearGradient id="g"><stop stop-color="#53ac38" stop-opacity="0"/><stop offset=".65" stop-color="#a6ec65"/><stop offset="1" stop-color="#f4ffd8"/></linearGradient></defs><path d="M2 16 42 5 62 16 42 27Z" fill="url(#g)"/><ellipse cx="45" cy="16" rx="12" ry="6" fill="#dbff9f"/><ellipse cx="48" cy="16" rx="7" ry="3" fill="#fffde6"/></svg>

@@ -56,3 +56,7 @@ The workflow needs repository Pages permissions and an allowed `github-pages` en
 ## Visual assets
 
 The Wildwood theme uses a generated forest clearing and a transparent nine-unit atlas for all four towers and five enemy types. Both are shipped locally as optimized WebP images (under 900 KB combined); no external asset CDN is required. Menu portraits and battlefield units share the same atlas. The route is rendered separately for each map, and terrain is cached once after load. Vector terrain/units remain available when images fail to load. See `assets/art/README.md` for provenance and atlas layout.
+
+## Combat animation
+
+Towers recoil when firing; Frost glows. Enemies bob/lean while moving, face their horizontal travel direction and briefly compress when hit. These are procedural animations of the existing sprites, rather than extra sprite-sheet poses. Four local SVG projectile assets provide green bolts, blue sniper streaks, cannon shells and ice shards. Muzzle flashes, hit rings, splash explosions, slowing rings, death sparks and Meteor trails are rendered on canvas. Visual effects share simulation timing, freeze on Pause, clear on Restart, and finish fading after game over. Particle/effect counts are capped at 160/64. The browser's reduced-motion preference suppresses recoil, bobbing, trails and particles while keeping simple impact feedback.

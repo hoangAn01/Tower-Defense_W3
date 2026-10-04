@@ -102,7 +102,8 @@ const ASSETS = {
     projectiles: {
         basic: 'assets/projectiles/basic_bullet.svg',
         sniper: 'assets/projectiles/sniper_bullet.svg',
-        cannon: 'assets/projectiles/cannon_shell.svg'
+        cannon: 'assets/projectiles/cannon_shell.svg',
+        frost: 'assets/projectiles/frost_shard.svg'
     }
 };
 
@@ -125,7 +126,7 @@ function drawSprite(type, x, y, size, opacity = 1) {
     return true;
 }
 function loadArt() {
-    return Promise.all(Object.entries({terrain:'assets/art/forest.webp', units:'assets/art/units.webp'}).map(([key, source]) =>
+    return Promise.all(Object.entries({terrain:'assets/art/forest.webp', units:'assets/art/units.webp', ...Object.fromEntries(Object.entries(ASSETS.projectiles).map(([type,url]) => [`shot_${type}`,url]))}).map(([key, source]) =>
         new Promise(resolve => {
             const image = new Image();
             image.onload = () => { loadedImages[key] = image; resolve(); };
@@ -133,6 +134,66 @@ function loadArt() {
             image.src = source;
         })
     )).then(() => { cacheBattlefield(); drawGame(); });
+}
+
+// Visual time follows the simulation, so Pause also freezes recoil and particles.
+const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+let motionReduced = motionPreference.matches;
+let visualTick = 0;
+const particles = [];
+const MAX_PARTICLES = 160;
+const MAX_EFFECTS = 64;
+motionPreference.addEventListener('change', event => {
+    motionReduced = event.matches;
+    if (motionReduced) particles.length = 0;
+});
+function emitEffect(kind, x, y, color, size = 20, duration = 18) {
+    if (gameState.effects.length >= MAX_EFFECTS) gameState.effects.shift();
+    gameState.effects.push({kind,x,y,color,size,ticks:duration,duration});
+}
+function burst(x, y, color, count = 8) {
+    if (motionPreference.matches) return;
+    for (let i = 0; i < count && particles.length < MAX_PARTICLES; i++) {
+        const angle = Math.random() * Math.PI * 2, speed = 0.7 + Math.random() * 2.2;
+        particles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,color,ticks:20,duration:20});
+    }
+}
+function updateVisuals() {
+    motionReduced = motionPreference.matches;
+    if (motionReduced) particles.length = 0;
+    visualTick++;
+    for (const effect of gameState.effects) effect.ticks--;
+    gameState.effects = gameState.effects.filter(effect => effect.ticks > 0);
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const particle = particles[i];
+        particle.x += particle.vx; particle.y += particle.vy;
+        particle.vx *= 0.94; particle.vy = particle.vy * 0.94 + 0.025;
+        if (--particle.ticks <= 0) particles.splice(i,1);
+    }
+}
+function drawEffects() {
+    ctx.save();
+    for (const effect of gameState.effects) {
+        const age = 1 - effect.ticks / effect.duration;
+        ctx.globalAlpha = motionReduced ? 0.35 : 1 - age;
+        ctx.strokeStyle = effect.color; ctx.fillStyle = effect.color;
+        const radius = motionReduced ? effect.size * 0.6 : Math.max(2,effect.size * (0.2 + age));
+        ctx.lineWidth = effect.kind === 'explosion' ? 4 : 2;
+        ctx.beginPath(); ctx.arc(effect.x,effect.y,radius,0,Math.PI*2); ctx.stroke();
+        if (effect.kind === 'explosion' || effect.kind === 'muzzle') {
+            ctx.globalAlpha *= 0.5;
+            ctx.beginPath(); ctx.arc(effect.x,effect.y,radius*0.65,0,Math.PI*2); ctx.fill();
+        }
+        if (effect.kind === 'meteor' && !motionReduced) {
+            ctx.lineWidth = 6 * (1-age);
+            ctx.beginPath(); ctx.moveTo(effect.x-80*(1-age),effect.y-120*(1-age)); ctx.lineTo(effect.x,effect.y); ctx.stroke();
+        }
+    }
+    for (const particle of particles) {
+        ctx.globalAlpha = particle.ticks / particle.duration;
+        ctx.fillStyle = particle.color; ctx.fillRect(particle.x-1.5,particle.y-1.5,3,3);
+    }
+    ctx.restore();
 }
 
 // Tower Types Configuration
@@ -485,6 +546,8 @@ class Tower {
         this.baseConfig = { ...TOWER_TYPES[type] };
         this.config = { ...TOWER_TYPES[type] };
         this.cooldown = 0;
+        this.recoilTicks = 0;
+        this.aim = {x:1,y:0};
         this.target = null;
         this.gridX = Math.floor(x / CONFIG.GRID_SIZE);
         this.gridY = Math.floor(y / CONFIG.GRID_SIZE);
@@ -497,6 +560,7 @@ class Tower {
     }
 
     update() {
+        this.recoilTicks = Math.max(0, this.recoilTicks - 1);
         if (this.cooldown > 0) {
             this.cooldown--;
             return;
@@ -528,12 +592,17 @@ class Tower {
     }
 
     shoot() {
-        if (this.cooldown > 0) return;
+        if (this.cooldown > 0 || !this.target || this.target.health <= 0) return;
+        this.aim = normalize(this.target.x-this.x, this.target.y-this.y);
+        this.recoilTicks = this.type === 'cannon' ? 12 : 7;
+        const muzzleX = this.x + this.aim.x * 24, muzzleY = this.y + this.aim.y * 24;
+        emitEffect('muzzle', muzzleX, muzzleY, this.type === 'frost' ? '#b9f8ff' : '#ffe6a3', this.type === 'cannon' ? 16 : 9, 8);
+        burst(muzzleX,muzzleY,this.config.color,4);
 
         const bullet = new Bullet(
             this.x, this.y, 
             this.target, 
-            this.config
+            this.config, this.type
         );
         gameState.bullets.push(bullet);
         this.cooldown = this.config.cooldown;
@@ -587,10 +656,20 @@ class Tower {
         ctx.beginPath();
         ctx.ellipse(this.x, this.y + 19, 24, 9, 0, 0, Math.PI * 2);
         ctx.fill();
+        ctx.save();
+        if (!motionReduced) {
+            const kick = Math.sin(this.recoilTicks / (this.type === 'cannon' ? 12 : 7) * Math.PI) * (this.type === 'cannon' ? 5 : 2.5);
+            ctx.translate(-this.aim.x * kick, -this.aim.y * kick);
+            if (this.type === 'frost') {
+                ctx.globalAlpha = 0.15 + Math.sin(visualTick * 0.07) * 0.08;
+                ctx.fillStyle = '#9eefff'; ctx.beginPath(); ctx.arc(this.x,this.y,25,0,Math.PI*2); ctx.fill(); ctx.globalAlpha = 1;
+            }
+        }
         if (!drawSprite(this.type, this.x, this.y - 5, 72)) {
             ctx.beginPath(); ctx.arc(this.x, this.y, this.config.size, 0, Math.PI * 2);
             ctx.fillStyle = this.config.color; ctx.fill();
         }
+        ctx.restore();
         if (this.level > 1) {
             ctx.fillStyle = '#10231b';
             ctx.beginPath(); ctx.arc(this.x + 21, this.y + 20, 9, 0, Math.PI * 2); ctx.fill();
@@ -621,10 +700,12 @@ class Tower {
 
 // Bullet Class
 class Bullet {
-    constructor(x, y, target, towerConfig) {
+    constructor(x, y, target, towerConfig, type) {
         this.x = x;
         this.y = y;
         this.target = target;
+        this.type = type || (towerConfig.slowFactor ? 'frost' : towerConfig.splashRadius ? 'cannon' : towerConfig.projectileSpeed === 8 ? 'sniper' : 'basic');
+        this.trail = [];
         this.speed = towerConfig.projectileSpeed;
         this.damage = towerConfig.damage;
         this.size = towerConfig.projectileSize;
@@ -643,6 +724,10 @@ class Bullet {
 
     update() {
         if (this.target.health <= 0 || this.target.escaped) return true;
+        if (!motionReduced) {
+            this.trail.push({x:this.x,y:this.y});
+            if (this.trail.length > 6) this.trail.shift();
+        }
         this.direction = normalize(this.target.x - this.x, this.target.y - this.y);
         this.x += this.direction.x * this.speed * CONFIG.GAME_SPEED;
         this.y += this.direction.y * this.speed * CONFIG.GAME_SPEED;
@@ -664,6 +749,8 @@ class Bullet {
     }
 
     hit() {
+        emitEffect(this.hasSplash ? 'explosion' : this.slowFactor ? 'frost' : 'impact',this.x,this.y,this.hasSplash ? '#ffbb69' : this.color,this.hasSplash ? this.splashRadius : 13,this.hasSplash ? 28 : 14);
+        burst(this.x,this.y,this.hasSplash ? '#ffd484' : this.color,this.hasSplash ? 14 : 6);
         if (this.hasSplash) {
             // Splash damage
             for (const enemy of gameState.enemies) {
@@ -683,14 +770,25 @@ class Bullet {
     }
 
     draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
+        ctx.save();
+        if (!motionReduced && this.trail.length > 1) {
+            ctx.strokeStyle = this.color; ctx.globalAlpha = 0.4;
+            ctx.lineWidth = this.type === 'sniper' ? 2 : 3;
+            ctx.beginPath(); ctx.moveTo(this.trail[0].x,this.trail[0].y);
+            for (const point of this.trail) ctx.lineTo(point.x,point.y);
+            ctx.lineTo(this.x,this.y); ctx.stroke(); ctx.globalAlpha = 1;
+        }
+        ctx.translate(this.x,this.y); ctx.rotate(Math.atan2(this.direction.y,this.direction.x));
+        const image = loadedImages[`shot_${this.type}`];
+        if (image) {
+            const length = this.type === 'cannon' ? 28 : this.type === 'sniper' ? 26 : 22;
+            ctx.drawImage(image,-length/2,-length/4,length,length/2);
+        } else {
+            ctx.fillStyle = this.color; ctx.beginPath(); ctx.ellipse(0,0,this.size*1.5,this.size,0,0,Math.PI*2); ctx.fill();
+        }
+        ctx.restore();
     }
+
 }
 
 // Enemy Class
@@ -702,6 +800,8 @@ class Enemy {
         this.health = this.config.health;
         this.maxHealth = this.config.health;
         this.speed = this.config.speed;
+        this.animationPhase = Math.random() * Math.PI * 2;
+        this.hitTicks = 0;
         this.slowTicks = 0;
         this.slowFactor = 1;
         this.damage = this.config.damage;
@@ -728,10 +828,12 @@ class Enemy {
     update() {
         if (this.health <= 0) return;
 
+        this.hitTicks = Math.max(0,this.hitTicks-1);
         // Move along path
         const movement = this.speed * (this.slowTicks > 0 ? this.slowFactor : 1) * CONFIG.GAME_SPEED;
         if (this.slowTicks > 0) this.slowTicks--;
         this.progress += movement;
+        this.animationPhase += movement * (this.type === 'fast' ? 0.2 : 0.13);
         
         if (this.progress >= this.totalProgress) {
             this.pathIndex++;
@@ -766,8 +868,11 @@ class Enemy {
 
     takeDamage(amount) {
         if (this.health <= 0 || !Number.isFinite(amount) || amount <= 0) return;
+        this.hitTicks = 6;
         this.health = Math.max(0, this.health - amount);
         if (this.health <= 0) {
+            emitEffect('death',this.x,this.y,'#edda85',this.size,20);
+            burst(this.x,this.y,this.color,8);
             gameState.gold += this.config.reward;
             gameState.enemiesKilled++;
             updateUI();
@@ -777,10 +882,20 @@ class Enemy {
     draw() {
         ctx.fillStyle = 'rgba(4, 19, 12, 0.35)';
         ctx.beginPath(); ctx.ellipse(this.x, this.y + this.size * 0.65, this.size * 0.8, this.size * 0.3, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.save();
+        if (!motionReduced) {
+            const stride = Math.sin(this.animationPhase);
+            const bob = this.type === 'fast' ? stride * 4 : Math.abs(stride) * (this.type === 'tank' ? 1.5 : 2.5);
+            ctx.translate(this.x,this.y-bob);
+            ctx.rotate(stride * (this.type === 'tank' ? 0.035 : 0.07));
+            ctx.scale(this.direction.x < -0.1 ? -1 : 1, this.hitTicks > 0 ? 0.93 : 1);
+            ctx.translate(-this.x,-this.y);
+        }
         if (!drawSprite(this.type, this.x, this.y - 5, this.size * 2.6)) {
             ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
             ctx.fillStyle = this.color; ctx.fill();
         }
+        ctx.restore();
         if (this.slowTicks > 0) {
             ctx.strokeStyle = '#a5f3fc'; ctx.lineWidth = 2;
             ctx.beginPath(); ctx.ellipse(this.x, this.y + this.size * 0.65, this.size, this.size * 0.4, 0, 0, Math.PI * 2); ctx.stroke();
@@ -811,6 +926,8 @@ function initGame() {
     gameState.isPaused = false;
     gameState.meteorCooldown = 0;
     gameState.effects = [];
+    particles.length = 0;
+    visualTick = 0;
     gameState.mousePosition = null;
     towerOptions.forEach(opt => opt.classList.remove('selected'));
     gameState.health = CONFIG.INITIAL_HEALTH;
@@ -889,23 +1006,25 @@ function finishWave() {
 function castMeteor() {
     if (!gameState.isWaveActive || gameState.isGameOver || gameState.isPaused || gameState.meteorCooldown > 0) return;
     gameState.meteorCooldown = 30000;
-    for (const enemy of gameState.enemies) enemy.takeDamage(60);
-    gameState.effects.push({ticks: 30});
+    for (const enemy of gameState.enemies) {
+        emitEffect('meteor',enemy.x,enemy.y,'#ffb65c',45,28);
+        burst(enemy.x,enemy.y,'#ffd08a',10);
+        enemy.takeDamage(60);
+    }
     playSound(150);
     showGameMessage('Meteor: 60 damage to all enemies!', 'success');
     updateUI();
 }
 
 function updateGame() {
-    if (gameState.isGameOver || gameState.isPaused) return;
+    if (gameState.isPaused) return;
+    updateVisuals();
+    if (gameState.isGameOver) return;
     gameState.meteorCooldown = Math.max(0, gameState.meteorCooldown - 1000 / 60);
     if (gameState.isWaveActive) {
         gameState.waveElapsed += 1000 / 60;
         spawnEnemies();
     }
-    for (const effect of gameState.effects) effect.ticks--;
-    gameState.effects = gameState.effects.filter(effect => effect.ticks > 0);
-
     // Update towers
     for (const tower of gameState.towers) {
         tower.update();
@@ -958,11 +1077,6 @@ function drawGame() {
 
     ctx.drawImage(backgroundCanvas, 0, 0);
     if (gameState.selectedTowerType) drawGrid(ctx);
-    if (gameState.effects.length) {
-        ctx.fillStyle = `rgba(251, 146, 60, ${gameState.effects[0].ticks / 100})`;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
     // Draw bullets
     for (const bullet of gameState.bullets) {
         bullet.draw();
@@ -977,6 +1091,8 @@ function drawGame() {
     for (const tower of gameState.towers) {
         tower.draw();
     }
+
+    drawEffects();
 
     // Draw tower placement preview
     if (gameState.selectedTowerType) {
