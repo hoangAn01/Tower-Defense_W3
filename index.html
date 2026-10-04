@@ -4,10 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tower Defense W3</title>
+    <link rel="icon" href="assets/towers/basic_tower.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="game-container">
+        <header class="title-bar">
+            <div><p class="eyebrow">BUILD · DEFEND · SURVIVE</p><h1>Tower Defense <span>W3</span></h1></div>
+            <div class="record">Best cleared wave <strong id="bestWave">0</strong> / 15</div>
+        </header>
+        <section class="command-bar" aria-label="Game setup">
+            <label>Map <select id="mapSelect"><option value="winding">Winding Valley</option><option value="switchback">Switchback</option></select></label>
+            <button id="saveBtn" class="btn btn-secondary">Save checkpoint</button>
+            <button id="resumeBtn" class="btn btn-secondary" disabled>Load checkpoint</button>
+            <button id="soundBtn" class="btn btn-secondary" aria-pressed="false">Sound: Off</button>
+        </section>
         <div class="game-header">
             <div class="game-stats">
                 <div class="stat">
@@ -16,7 +27,7 @@
                 </div>
                 <div class="stat">
                     <span class="stat-label">Gold:</span>
-                    <span id="gold" class="stat-value">100</span>
+                    <span id="gold" class="stat-value">150</span>
                 </div>
                 <div class="stat">
                     <span class="stat-label">Wave:</span>
@@ -37,15 +48,17 @@
             </div>
             <div class="game-controls">
                 <button id="startWaveBtn" class="btn btn-primary">Start Wave</button>
+                <button id="pauseBtn" class="btn btn-secondary" aria-pressed="false">Pause</button>
+                <button id="meteorBtn" class="btn btn-meteor" disabled title="60 damage to all enemies; 30 second cooldown">Meteor</button>
                 <button id="restartBtn" class="btn btn-secondary">Restart</button>
             </div>
         </div>
         
         <div class="game-area">
-            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            <canvas id="gameCanvas" width="800" height="600" aria-label="Battlefield. Choose a tower and tap a tile away from the route."></canvas>
             
             <div class="tower-menu">
-                <div class="tower-option" data-tower-type="basic" data-cost="50">
+                <button type="button" class="tower-option" data-tower-type="basic" data-cost="50">
                     <div class="tower-icon basic">
                         <img src="assets/towers/basic_tower.svg" alt="Basic Tower" class="tower-svg">
                     </div>
@@ -53,8 +66,8 @@
                         <span class="tower-name">Basic Tower</span>
                         <span class="tower-cost">50g</span>
                     </div>
-                </div>
-                <div class="tower-option" data-tower-type="sniper" data-cost="100">
+                </button>
+                <button type="button" class="tower-option" data-tower-type="sniper" data-cost="100">
                     <div class="tower-icon sniper">
                         <img src="assets/towers/sniper_tower.svg" alt="Sniper Tower" class="tower-svg">
                     </div>
@@ -62,8 +75,8 @@
                         <span class="tower-name">Sniper Tower</span>
                         <span class="tower-cost">100g</span>
                     </div>
-                </div>
-                <div class="tower-option" data-tower-type="cannon" data-cost="150">
+                </button>
+                <button type="button" class="tower-option" data-tower-type="cannon" data-cost="150">
                     <div class="tower-icon cannon">
                         <img src="assets/towers/cannon_tower.svg" alt="Cannon Tower" class="tower-svg">
                     </div>
@@ -71,12 +84,22 @@
                         <span class="tower-name">Cannon Tower</span>
                         <span class="tower-cost">150g</span>
                     </div>
-                </div>
+                </button>
+                <button type="button" class="tower-option" data-tower-type="frost" data-cost="75" title="Slows enemies by 50% for 2 seconds">
+                    <span class="tower-icon frost" aria-hidden="true">❄</span>
+                    <span class="tower-info"><span class="tower-name">Frost Tower</span><span class="tower-cost">75g · Slow</span></span>
+                </button>
             </div>
         </div>
-        
+        <details class="help-panel">
+            <summary>How to play &amp; tower guide</summary>
+            <p>Choose a tower, then tap an empty tile off the route. Tap a placed tower to upgrade or sell it. You can build during a wave. Escape cancels selection or closes upgrades.</p>
+            <p><strong>Basic:</strong> affordable rapid fire · <strong>Sniper:</strong> long range · <strong>Cannon:</strong> area damage · <strong>Frost:</strong> slows enemies by 50% for 2 seconds.</p>
+            <p>Protect the red base through 15 waves. Clearing a wave grants 20 + 2 × wave gold and saves a checkpoint. Load restores the last saved preparation phase. Restart starts a fresh run on the selected map; your checkpoint remains until overwritten.</p>
+            <p><strong>Meteor:</strong> 60 damage to every enemy, once per 30 seconds. Sound is optional. Leaving the tab pauses an active wave; press Resume to continue. Maps can be changed before building or starting a wave.</p>
+        </details>
         <div class="game-footer">
-            <div id="gameMessage" class="game-message"></div>
+            <div id="gameMessage" class="game-message" role="status" aria-live="polite"></div>
             <div id="selectedTower" class="selected-tower-info">
                 Selected: <span id="selectedTowerName">None</span>
                 <button id="cancelPlacement" class="btn btn-cancel" style="display: none;">Cancel</button>
@@ -84,11 +107,11 @@
         </div>
         
         <!-- Tower Upgrade Modal -->
-        <div id="upgradeModal" class="upgrade-modal">
+        <div id="upgradeModal" class="upgrade-modal" role="dialog" aria-modal="true" aria-labelledby="upgradeTowerName">
             <div class="upgrade-content">
                 <div class="upgrade-header">
                     <h3 id="upgradeTowerName">Upgrade Tower</h3>
-                    <button id="closeUpgradeModal" class="btn-close">&times;</button>
+                    <button id="closeUpgradeModal" class="btn-close" aria-label="Close upgrades">&times;</button>
                 </div>
                 <div class="upgrade-stats">
                     <div class="upgrade-stat">

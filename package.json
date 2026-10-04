@@ -1,0 +1,14 @@
+{
+  "name": "tower-defense-w3",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Static canvas tower defense game",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "python3 -m http.server 8000 --bind 127.0.0.1",
+    "check": "node --check game.js",
+    "build": "node scripts/build.mjs",
+    "test": "playwright test"
+  },
+  "devDependencies": { "@playwright/test": "1.58.2" }
+}

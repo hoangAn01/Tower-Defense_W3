@@ -654,3 +654,57 @@ body {
     object-fit: contain;
     filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
 }
+
+/* Command deck and responsive battlefield */
+.title-bar { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:20px; }
+.eyebrow { color:#7dd3fc; letter-spacing:3px; font-size:11px; margin-bottom:8px; }
+h1 { font-size:clamp(24px,4vw,38px); letter-spacing:-1px; }
+h1 span { color:#86efac; }
+.record { color:#b8c5d6; font-size:14px; }
+.record strong { color:#86efac; font-size:24px; }
+.command-bar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:14px; margin-bottom:14px; background:#101b30; border:1px solid #334155; border-radius:10px; }
+.command-bar label { color:#cbd5e1; font-size:14px; }
+select { color:#fff; background:#1e293b; border:1px solid #64748b; padding:10px; border-radius:6px; margin-left:6px; }
+.game-header { flex-wrap:wrap; gap:16px; }
+.game-stats { flex-wrap:wrap; gap:16px; }
+.game-controls { flex-wrap:wrap; }
+.game-area { align-items:flex-start; }
+#gameCanvas { width:min(800px,100%); height:auto; min-width:0; flex:1; border-width:0; outline:2px solid #334155; touch-action:manipulation; }
+.tower-menu { flex-shrink:0; }
+.tower-option { color:inherit; font-family:inherit; }
+.tower-option:disabled { opacity:0.4; transform:none; }
+.tower-option:focus-visible, .btn:focus-visible, select:focus-visible, summary:focus-visible { outline:3px solid #7dd3fc; outline-offset:3px; }
+.tower-icon.basic::before, .tower-icon.sniper::before, .tower-icon.cannon::before { content:none; }
+.tower-icon.frost { color:#e0f2fe; background:#0369a1; font-size:30px; }
+.btn-meteor { background:#c2410c; color:#fff; }
+.help-panel { margin-top:18px; padding:16px; background:#101b30; border:1px solid #334155; border-radius:10px; color:#cbd5e1; font-size:14px; line-height:1.7; }
+.help-panel summary { color:#7dd3fc; cursor:pointer; font-weight:600; }
+.help-panel p { margin-top:10px; }
+.wave-indicator { pointer-events:none; padding:18px 28px; animation:wave-fade 2s forwards; }
+@keyframes wave-fade { 0%,65% { opacity:1; } 100% { opacity:0; } }
+.upgrade-content, .modal-content { min-width:0; width:min(500px,calc(100vw - 24px)); max-height:90vh; overflow:auto; }
+@media (max-width:900px) {
+    .game-area { align-items:stretch; }
+    .tower-menu { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); width:100%; gap:8px; }
+    .tower-option { padding:8px 4px; }
+    .title-bar { flex-wrap:wrap; }
+}
+@media (max-width:480px) {
+    .game-container { padding:12px; }
+    .game-header { padding:12px; align-items:stretch; }
+    .game-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .stat { flex-direction:column; gap:2px; }
+    .stat-value { text-align:center; }
+    .game-controls .btn { flex:1 1 40%; }
+    .btn { min-height:44px; padding:10px; font-size:11px; letter-spacing:0.4px; }
+    .tower-name { font-size:10px; }
+    .upgrade-content { padding:16px; }
+    .upgrade-options { flex-direction:column; gap:8px; }
+    .modal-title { font-size:28px; }
+    .modal-content { padding:20px; }
+    .selected-tower-info { flex-wrap:wrap; justify-content:center; }
+}
+@media (prefers-reduced-motion:reduce) {
+    .btn, .tower-option { transition:none; }
+    .tower-option:active { animation:none; }
+}
