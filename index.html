@@ -10,13 +10,13 @@
 <body>
     <div class="game-container">
         <header class="title-bar">
-            <div><p class="eyebrow">BUILD · DEFEND · SURVIVE</p><h1>Tower Defense <span>W3</span></h1></div>
-            <div class="record">Best cleared wave <strong id="bestWave">0</strong> / 15</div>
+            <div><p class="eyebrow">THE WILDWOOD CHRONICLES</p><h1>Tower Defense <span>W3</span></h1></div>
+            <div class="record">Best wave <strong id="bestWave">0</strong> / 15</div>
         </header>
         <section class="command-bar" aria-label="Game setup">
-            <label>Map <select id="mapSelect"><option value="winding">Winding Valley</option><option value="switchback">Switchback</option></select></label>
-            <button id="saveBtn" class="btn btn-secondary">Save checkpoint</button>
-            <button id="resumeBtn" class="btn btn-secondary" disabled>Load checkpoint</button>
+            <label>Map <select id="mapSelect"><option value="winding">Emerald Trail</option><option value="switchback">Serpent Run</option></select></label>
+            <button id="saveBtn" class="btn btn-secondary">Save</button>
+            <button id="resumeBtn" class="btn btn-secondary" disabled>Load</button>
             <button id="soundBtn" class="btn btn-secondary" aria-pressed="false">Sound: Off</button>
         </section>
         <div class="game-header">
@@ -57,39 +57,35 @@
         <div class="game-area">
             <canvas id="gameCanvas" width="800" height="600" aria-label="Battlefield. Choose a tower and tap a tile away from the route."></canvas>
             
-            <div class="tower-menu">
+            <aside class="tower-menu" aria-label="Tower selection">
+                <div class="arsenal-heading"><span>YOUR ARSENAL</span><small>Choose a tower to build</small></div>
                 <button type="button" class="tower-option" data-tower-type="basic" data-cost="50">
-                    <div class="tower-icon basic">
-                        <img src="assets/towers/basic_tower.svg" alt="Basic Tower" class="tower-svg">
-                    </div>
+                    <span class="sprite-portrait portrait-basic" aria-hidden="true"></span>
                     <div class="tower-info">
                         <span class="tower-name">Basic Tower</span>
-                        <span class="tower-cost">50g</span>
+                        <span class="tower-cost">50g</span><span class="tower-role">Rapid fire</span>
                     </div>
                 </button>
                 <button type="button" class="tower-option" data-tower-type="sniper" data-cost="100">
-                    <div class="tower-icon sniper">
-                        <img src="assets/towers/sniper_tower.svg" alt="Sniper Tower" class="tower-svg">
-                    </div>
+                    <span class="sprite-portrait portrait-sniper" aria-hidden="true"></span>
                     <div class="tower-info">
                         <span class="tower-name">Sniper Tower</span>
-                        <span class="tower-cost">100g</span>
+                        <span class="tower-cost">100g</span><span class="tower-role">Long range</span>
                     </div>
                 </button>
                 <button type="button" class="tower-option" data-tower-type="cannon" data-cost="150">
-                    <div class="tower-icon cannon">
-                        <img src="assets/towers/cannon_tower.svg" alt="Cannon Tower" class="tower-svg">
-                    </div>
+                    <span class="sprite-portrait portrait-cannon" aria-hidden="true"></span>
                     <div class="tower-info">
                         <span class="tower-name">Cannon Tower</span>
-                        <span class="tower-cost">150g</span>
+                        <span class="tower-cost">150g</span><span class="tower-role">Area damage</span>
                     </div>
                 </button>
                 <button type="button" class="tower-option" data-tower-type="frost" data-cost="75" title="Slows enemies by 50% for 2 seconds">
-                    <span class="tower-icon frost" aria-hidden="true">❄</span>
-                    <span class="tower-info"><span class="tower-name">Frost Tower</span><span class="tower-cost">75g · Slow</span></span>
+                    <span class="sprite-portrait portrait-frost" aria-hidden="true"></span>
+                    <span class="tower-info"><span class="tower-name">Frost Tower</span><span class="tower-cost">75g</span><span class="tower-role">Freeze enemies</span></span>
                 </button>
-            </div>
+                <div class="arsenal-tip">Build off the trail.<br>Tap a tower to upgrade.</div>
+            </aside>
         </div>
         <details class="help-panel">
             <summary>How to play &amp; tower guide</summary>

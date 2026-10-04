@@ -191,3 +191,24 @@ test('fire-rate cap and affordability never charge for invalid purchases', async
     return {upgrade,goldUnchanged:gameState.gold===gold,towers:gameState.towers.length};
   })).toEqual({upgrade:false,goldUnchanged:true,towers:1});
 });
+
+test('generated terrain and transparent unit atlas decode and are used by portraits', async ({page}) => {
+  await page.evaluate(()=>window.artReady);
+  expect(await page.evaluate(()=>({
+    terrain: [loadedImages.terrain.naturalWidth,loadedImages.terrain.naturalHeight],
+    units: [loadedImages.units.naturalWidth,loadedImages.units.naturalHeight],
+    portrait: getComputedStyle(document.querySelector('.portrait-frost')).backgroundImage.includes('units.webp')
+  }))).toEqual({terrain:[1448,1086],units:[1254,1254],portrait:true});
+  await build(page,'frost');
+  expect(await page.evaluate(()=>{drawGame();return gameState.towers.length;})).toBe(1);
+});
+
+test('failed art downloads keep fallback battlefield and tower placement playable', async ({page}) => {
+  await page.route('**/assets/art/*.webp',route=>route.abort());
+  await page.reload(); await page.evaluate(()=>window.artReady);
+  expect(await page.evaluate(()=>Object.keys(loadedImages))).toEqual([]);
+  await build(page);
+  expect(await page.evaluate(()=>{drawGame();return gameState.towers.length;})).toBe(1);
+  await page.locator('#startWaveBtn').click(); await page.clock.runFor(3200);
+  expect(await page.evaluate(()=>gameState.enemies.length)).toBe(1);
+});

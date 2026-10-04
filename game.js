@@ -106,8 +106,34 @@ const ASSETS = {
     }
 };
 
-// Preloaded images
+// One atlas is shared by menu portraits and battlefield units.
 const loadedImages = {};
+const SPRITE_CELLS = {basic:0, sniper:1, cannon:2, frost:3, normal:4, fast:5, tank:6, boss:7, scout:8};
+function drawSprite(type, x, y, size, opacity = 1) {
+    const atlas = loadedImages.units;
+    if (!atlas || !Object.hasOwn(SPRITE_CELLS, type)) return false;
+    const cell = SPRITE_CELLS[type];
+    const width = atlas.naturalWidth / 3;
+    const height = atlas.naturalHeight / 3;
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    const inset = type === 'cannon' ? 16 : 0;
+    ctx.drawImage(atlas, cell % 3 * width + inset, Math.floor(cell / 3) * height,
+        width - inset, height, x - size / 2 + size * inset / width, y - size / 2,
+        size * (1 - inset / width), size);
+    ctx.restore();
+    return true;
+}
+function loadArt() {
+    return Promise.all(Object.entries({terrain:'assets/art/forest.webp', units:'assets/art/units.webp'}).map(([key, source]) =>
+        new Promise(resolve => {
+            const image = new Image();
+            image.onload = () => { loadedImages[key] = image; resolve(); };
+            image.onerror = () => resolve(); // Vector fallbacks keep the game playable.
+            image.src = source;
+        })
+    )).then(() => { cacheBattlefield(); drawGame(); });
+}
 
 // Tower Types Configuration
 const TOWER_TYPES = {
@@ -447,9 +473,7 @@ function initPath() {
             pathCells.add(`${a.x + Math.sign(b.x-a.x)*step},${a.y + Math.sign(b.y-a.y)*step}`);
         }
     }
-    // Static grid and route are drawn once per map instead of once per frame.
-    backgroundContext.clearRect(0, 0, backgroundCanvas.width, backgroundCanvas.height);
-    drawGrid(backgroundContext); drawPath(backgroundContext);
+    cacheBattlefield();
 }
 
 // Tower Class
@@ -559,20 +583,20 @@ class Tower {
     }
 
     draw() {
-        // Draw tower base
+        ctx.fillStyle = 'rgba(4, 19, 12, 0.4)';
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.config.size, 0, Math.PI * 2);
-        ctx.fillStyle = this.config.color;
+        ctx.ellipse(this.x, this.y + 19, 24, 9, 0, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = this.config.secondaryColor;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Draw tower details
-        ctx.fillStyle = '#fff';
-        ctx.font = '10px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(this.config.name.split(' ')[0], this.x, this.y + 3);
+        if (!drawSprite(this.type, this.x, this.y - 5, 72)) {
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.config.size, 0, Math.PI * 2);
+            ctx.fillStyle = this.config.color; ctx.fill();
+        }
+        if (this.level > 1) {
+            ctx.fillStyle = '#10231b';
+            ctx.beginPath(); ctx.arc(this.x + 21, this.y + 20, 9, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#f7d87c'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(this.level, this.x + 21, this.y + 23);
+        }
 
         // Draw cooldown indicator
         if (this.cooldown > 0) {
@@ -751,14 +775,16 @@ class Enemy {
     }
 
     draw() {
-        // Draw enemy body
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        ctx.strokeStyle = this.secondaryColor;
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        ctx.fillStyle = 'rgba(4, 19, 12, 0.35)';
+        ctx.beginPath(); ctx.ellipse(this.x, this.y + this.size * 0.65, this.size * 0.8, this.size * 0.3, 0, 0, Math.PI * 2); ctx.fill();
+        if (!drawSprite(this.type, this.x, this.y - 5, this.size * 2.6)) {
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = this.color; ctx.fill();
+        }
+        if (this.slowTicks > 0) {
+            ctx.strokeStyle = '#a5f3fc'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.ellipse(this.x, this.y + this.size * 0.65, this.size, this.size * 0.4, 0, 0, Math.PI * 2); ctx.stroke();
+        }
 
         // Draw health bar
         const healthPercent = this.health / this.maxHealth;
@@ -771,11 +797,7 @@ class Enemy {
         ctx.fillStyle = healthPercent > 0.5 ? '#4CAF50' : healthPercent > 0.25 ? '#FFC107' : '#F44336';
         ctx.fillRect(this.x - barWidth / 2, this.y - this.size - 10, barWidth * healthPercent, barHeight);
 
-        // Draw enemy type indicator
-        ctx.fillStyle = '#fff';
-        ctx.font = '8px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(this.type.charAt(0).toUpperCase(), this.x, this.y + 3);
+
     }
 }
 
@@ -935,6 +957,7 @@ function drawGame() {
     ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
     ctx.drawImage(backgroundCanvas, 0, 0);
+    if (gameState.selectedTowerType) drawGrid(ctx);
     if (gameState.effects.length) {
         ctx.fillStyle = `rgba(251, 146, 60, ${gameState.effects[0].ticks / 100})`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -972,7 +995,7 @@ function drawGame() {
 }
 
 function drawGrid(ctx = backgroundContext) {
-    ctx.strokeStyle = '#444';
+    ctx.strokeStyle = 'rgba(218, 235, 183, 0.13)';
     ctx.lineWidth = 0.5;
     
     // Draw vertical lines
@@ -993,40 +1016,55 @@ function drawGrid(ctx = backgroundContext) {
 }
 
 
-function drawPath(ctx = backgroundContext) {
-    if (gameState.path.length === 0) return;
-
-    // Draw path line
-    ctx.strokeStyle = '#888';
-    ctx.lineWidth = CONFIG.GRID_SIZE / 4;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    ctx.beginPath();
-    ctx.moveTo(gameState.path[0].x, gameState.path[0].y);
-    
-    for (let i = 1; i < gameState.path.length; i++) {
-        ctx.lineTo(gameState.path[i].x, gameState.path[i].y);
+function cacheBattlefield() {
+    const ctx = backgroundContext;
+    ctx.clearRect(0, 0, backgroundCanvas.width, backgroundCanvas.height);
+    if (loadedImages.terrain) {
+        ctx.drawImage(loadedImages.terrain, 0, 0, backgroundCanvas.width, backgroundCanvas.height);
+    } else {
+        ctx.fillStyle = '#28513b'; ctx.fillRect(0, 0, backgroundCanvas.width, backgroundCanvas.height);
     }
-    
-    ctx.stroke();
+    drawPath(ctx);
+}
 
-    // Draw start and end points
-    ctx.beginPath();
-    ctx.arc(gameState.path[0].x, gameState.path[0].y, 10, 0, Math.PI * 2);
-    ctx.fillStyle = '#4CAF50';
-    ctx.fill();
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(gameState.path[gameState.path.length - 1].x, gameState.path[gameState.path.length - 1].y, 10, 0, Math.PI * 2);
-    ctx.fillStyle = '#F44336';
-    ctx.fill();
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+function drawPath(ctx = backgroundContext) {
+    if (!gameState.path.length) return;
+    ctx.save();
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const trace = () => {
+        ctx.beginPath(); ctx.moveTo(gameState.path[0].x, gameState.path[0].y);
+        for (const point of gameState.path.slice(1)) ctx.lineTo(point.x, point.y);
+    };
+    trace(); ctx.strokeStyle = '#263c25'; ctx.lineWidth = 40; ctx.stroke();
+    trace(); ctx.strokeStyle = '#93815a'; ctx.lineWidth = 34; ctx.stroke();
+    trace(); ctx.strokeStyle = '#b7a071'; ctx.lineWidth = 26; ctx.stroke();
+    // Deterministic pebbles add texture without work in the animation loop.
+    for (let i = 1; i < gameState.path.length; i++) {
+        const a = gameState.path[i - 1], b = gameState.path[i];
+        const length = distance(a.x, a.y, b.x, b.y);
+        for (let step = 14; step < length; step += 22) {
+            const ratio = step / length;
+            const jitter = Math.sin(step * 3 + i) * 7;
+            const x = a.x + (b.x - a.x) * ratio + (a.y !== b.y ? jitter : 0);
+            const y = a.y + (b.y - a.y) * ratio + (a.x !== b.x ? jitter : 0);
+            ctx.fillStyle = step % 3 ? '#9d895e' : '#cab488';
+            ctx.beginPath(); ctx.ellipse(x, y, 3, 1.8, 0.3, 0, Math.PI * 2); ctx.fill();
+        }
+    }
+    const entrance = gameState.path[0], base = gameState.path.at(-1);
+    ctx.fillStyle = '#253b29'; ctx.strokeStyle = '#a6dc72'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.ellipse(entrance.x, entrance.y, 15, 21, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#9be075'; ctx.font = 'bold 20px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('›', entrance.x, entrance.y + 6);
+    // Stone gate at the defended end of the route.
+    ctx.fillStyle = '#404f44'; ctx.fillRect(base.x - 17, base.y - 14, 34, 32);
+    ctx.fillStyle = '#c5c1a3'; ctx.fillRect(base.x - 15, base.y - 19, 9, 38); ctx.fillRect(base.x + 6, base.y - 19, 9, 38);
+    ctx.fillStyle = '#e4d9b6';
+    for (const offset of [-15, 6]) { ctx.fillRect(base.x + offset - 2, base.y - 23, 13, 9); }
+    ctx.fillStyle = '#20362c'; ctx.fillRect(base.x - 5, base.y + 1, 10, 18);
+    ctx.fillStyle = '#f5b54b'; ctx.fillRect(base.x - 3, base.y - 25, 3, 18);
+    ctx.beginPath(); ctx.moveTo(base.x, base.y - 25); ctx.lineTo(base.x + 13, base.y - 20); ctx.lineTo(base.x, base.y - 15); ctx.fill();
+    ctx.restore();
 }
 
 function drawPlacementPreview() {
@@ -1049,6 +1087,8 @@ function drawPlacementPreview() {
     ctx.strokeStyle = isValid ? '#4CAF50' : '#F44336';
     ctx.lineWidth = 2;
     ctx.stroke();
+
+    drawSprite(gameState.selectedTowerType, pixelPos.x, pixelPos.y - 5, 72, 0.65);
 
     // Draw range preview
     ctx.beginPath();
@@ -1493,6 +1533,7 @@ document.addEventListener('visibilitychange', () => {
 initGame();
 try { document.getElementById('resumeBtn').disabled = !localStorage.getItem(SAVE_KEY); } catch {}
 showGameMessage('Choose a tower, then tap an empty tile to build.', 'info');
+window.artReady = loadArt();
 requestAnimationFrame(gameLoop);
 
 // Make functions globally accessible for debugging

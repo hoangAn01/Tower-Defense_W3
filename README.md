@@ -52,3 +52,7 @@ The simulation runs at 60 fixed steps per second independently of monitor refres
 4. Use the site URL reported by the successful deployment job.
 
 The workflow needs repository Pages permissions and an allowed `github-pages` environment. Pull requests only validate; they do not deploy. Preparing this workflow locally does not publish a live site.
+
+## Visual assets
+
+The Wildwood theme uses a generated forest clearing and a transparent nine-unit atlas for all four towers and five enemy types. Both are shipped locally as optimized WebP images (under 900 KB combined); no external asset CDN is required. Menu portraits and battlefield units share the same atlas. The route is rendered separately for each map, and terrain is cached once after load. Vector terrain/units remain available when images fail to load. See `assets/art/README.md` for provenance and atlas layout.
